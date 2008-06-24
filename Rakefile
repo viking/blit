@@ -32,3 +32,13 @@ desc "Add new files to subversion"
 task :svn_add do
    system "svn status | grep '^\?' | sed -e 's/? *//' | sed -e 's/ /\ /g' | xargs svn add"
 end
+
+desc "Initialize git repository"
+task :git_boot do
+  system "rm -fr repos/#{Merb.env}"
+  mkdir  "repos/#{Merb.env}"
+  repos = Git.init(File.expand_path("repos/#{Merb.env}"))
+  touch  "repos/#{Merb.env}/README"
+  repos.add("README")
+  repos.commit("Initial commit")
+end
