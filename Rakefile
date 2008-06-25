@@ -39,6 +39,9 @@ task :git_boot do
   mkdir  "repos/#{Merb.env}"
   repos = Git.init(File.expand_path("repos/#{Merb.env}"))
   touch  "repos/#{Merb.env}/README"
+  mkdir  "repos/#{Merb.env}/posts"
+  touch  "repos/#{Merb.env}/posts/housekeeping"
   repos.add("README")
+  repos.add("posts/housekeeping")
   repos.commit("Initial commit")
 end
