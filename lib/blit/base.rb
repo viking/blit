@@ -37,12 +37,13 @@ module Blit
         ids = Blit.repository.ls_files.keys.select do |k|
           k =~ /^#{plural}\/\d+/
         end
-        ids.collect! { |k| k.sub(/^.+?(\d+)$/, '\1').to_i }
+        ids.collect! { |k| k.sub(/^.+?(\d+)$/, '\1').to_i }.sort!
 
         case arg
-        when Fixnum
-          return nil  unless ids.include?(arg)
-          instantiate(arg)
+        when Fixnum, String 
+          id = arg.to_i
+          return nil  unless ids.include?(id)
+          instantiate(id)
         when :all
           ids.collect { |i| instantiate(i) } 
         end

@@ -68,6 +68,13 @@ describe "a subclass of Blit::Base" do
         pants.length.should == 32
         pants.id.should == 123
       end
+
+      it "should convert the id to an integer" do
+        pants = Pants.find("123")
+        pants.waist.should == 36
+        pants.length.should == 32
+        pants.id.should == 123
+      end
     end
     
     describe "when finding all objects" do
@@ -223,6 +230,9 @@ describe "a subclass of Blit::Base" do
         File.delete(@path + "1")     if File.exist?(@path + "1")
         File.delete(@path + "123")   if File.exist?(@path + "123")
       end
+    end
+
+    describe "#destroy" do
     end
   end
 
