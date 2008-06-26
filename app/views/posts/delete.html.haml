@@ -1,0 +1,5 @@
+%h1 Delete Post
+
+%p
+  == You're about to delete post #{@post.id}.  Are you sure?
+  == #{delete_button :post, @post.id} or #{link_to('Cancel', url(:posts))}

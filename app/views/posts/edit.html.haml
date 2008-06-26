@@ -1,0 +1,6 @@
+%h1 New Post
+
+- form_for :post, :action => url(:post, @post.id), :method => :put do
+  %p= text_control      :title, :label => "Title"
+  %p= text_area_control :body,  :label => "Body"
+  %p= submit_button "Submit"
