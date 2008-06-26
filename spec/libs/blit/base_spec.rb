@@ -14,7 +14,7 @@ describe "a subclass of Blit::Base" do
     @dir = stub("working directory", {
       :path => Merb.root + "/repos/" + Merb.env
     })
-    @repos = stub("git repository", :dir => @dir, :add => nil, :commit => nil)
+    @repos = stub("git repository", :dir => @dir, :add => nil, :commit => nil, :remove => nil)
     @hk = stub("housekeeper", :increment => 1, :sync => nil, :out_of_sync? => false)
     Blit.stub!(:repository).and_return(@repos)
     Blit::HouseKeeper.stub!(:new).and_return(@hk)
@@ -42,10 +42,10 @@ describe "a subclass of Blit::Base" do
   describe ".find" do
     before(:all) do
       File.open(@path + "123", 'w') do |f|
-        f.puts({:waist => 36, :length => 32}.to_yaml)
+        f.puts({"waist" => 36, "length" => 32}.to_yaml)
       end
       File.open(@path + "456", 'w') do |f|
-        f.puts({:waist => 38, :length => 30}.to_yaml)
+        f.puts({"waist" => 38, "length" => 30}.to_yaml)
       end
     end
 
@@ -98,7 +98,7 @@ describe "a subclass of Blit::Base" do
   describe "#instantiate" do
     before(:all) do
       File.open(@path + "123", 'w') do |f|
-        f.puts({:waist => 36, :length => 32}.to_yaml)
+        f.puts({"waist" => 36, "length" => 32}.to_yaml)
       end
     end
 
@@ -128,7 +128,7 @@ describe "a subclass of Blit::Base" do
     describe "when saving an existing object" do
       before(:all) do
         File.open(@path + "123", 'w') do |f|
-          f.puts({:waist => 36, :length => 32}.to_yaml)
+          f.puts({"waist" => 36, "length" => 32}.to_yaml)
         end
       end
 
@@ -231,8 +231,82 @@ describe "a subclass of Blit::Base" do
         File.delete(@path + "123")   if File.exist?(@path + "123")
       end
     end
+  end
 
-    describe "#destroy" do
+  describe "#update" do
+    before(:each) do
+      File.open(@path + "123", 'w') do |f|
+        f.puts({"waist" => 36, "length" => 32}.to_yaml)
+      end
+      @pants = Pants.instantiate(123)
+    end
+
+    it "should change its attributes" do
+      @pants.update("waist" => 37, "length" => 33)
+      @pants.waist.should == 37
+      @pants.length.should == 33
+    end
+
+    it "should change its file" do
+      @pants.update("waist" => 37, "length" => 33)
+      YAML.load_file(@path + "123").should == {
+        "waist" => 37,
+        "length" => 33
+      }
+    end
+
+    it "should add its file to the repos" do
+      @repos.should_receive(:add).with("pants/123")
+      @pants.update("waist" => 37, "length" => 33)
+    end
+
+    it "should commit to the repos" do
+      @repos.should_receive(:commit).with("Updated pants 123")
+      @pants.update("waist" => 37, "length" => 33)
+    end
+
+    describe "when nothing really changes" do
+      it "should NOT add its file to the repos" do
+        @repos.should_not_receive(:add).with("pants/123")
+        @pants.update("waist" => @pants.waist, "length" => @pants.length)
+      end
+
+      it "should NOT commit to the repos" do
+        @repos.should_not_receive(:commit).with("Updated pants 123")
+        @pants.update("waist" => @pants.waist, "length" => @pants.length)
+      end
+    end
+
+    after(:all) do
+      File.delete(@path + "123")
+    end
+  end
+
+  describe "#destroy" do
+    before(:each) do
+      File.open(@path + "123", 'w') do |f|
+        f.puts({"waist" => 36, "length" => 32}.to_yaml)
+      end
+      @pants = Pants.instantiate(123)
+    end
+
+    it "should delete the file" do
+      @pants.destroy
+      File.exist?(@path + "123").should be_false
+    end
+
+    it "should remove the file from the repository" do
+      @repos.should_receive(:remove).with("pants/123")
+      @pants.destroy
+    end
+
+    it "should commit" do
+      @repos.should_receive(:commit).with("Removed pants 123")
+      @pants.destroy
+    end
+
+    after(:all) do
+      File.delete(@path + "123")  if File.exist?(@path + "123")
     end
   end
 

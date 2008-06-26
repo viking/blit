@@ -5,7 +5,7 @@ module Blit
         names.each do |name| 
           class_eval <<-EOF, __FILE__, __LINE__
             def #{name}
-              @attributes[:#{name}]
+              @attributes["#{name}"]
             end
           EOF
         end
@@ -60,22 +60,59 @@ module Blit
     def save
       # create file
       @id ||= housekeeper.increment
-      fn = File.join(self.class.full_path, @id.to_s)
-      f  = File.new(fn, "w")
-      f.puts @attributes.to_yaml
-      f.close
+      write_attributes_to_file
 
       # add and commit
       if housekeeper.out_of_sync?
         housekeeper.sync  
         Blit.repository.add("#{self.class.plural}/housekeeping")
       end
-      Blit.repository.add("#{self.class.plural}/#{id}")
+      Blit.repository.add(shortfn)
       Blit.repository.commit("Added #{self.class.name.downcase} #{id}")
+    end
+
+    def update(attribs)
+      tmp = @attributes.merge(attribs)
+      if tmp != @attributes
+        @attributes = tmp
+        write_attributes_to_file
+
+        Blit.repository.add(shortfn)
+        Blit.repository.commit("Updated #{self.class.name.downcase} #{id}")
+      end
+    end
+
+    def destroy
+      File.delete(filename)
+      Blit.repository.remove(shortfn)
+      Blit.repository.commit("Removed #{self.class.name.downcase} #{id}")
     end
 
     def housekeeper
       self.class.housekeeper
     end
+
+    def filename
+      if @id
+        @filename ||= File.join(self.class.full_path, @id.to_s)
+      else
+        nil
+      end
+    end
+
+    def shortfn
+      if @id
+        @shortfn ||= File.join(self.class.plural, @id.to_s)
+      else
+        nil
+      end
+    end
+
+    private
+      def write_attributes_to_file
+        File.open(filename, "w") do |f|
+          f.puts @attributes.to_yaml
+        end
+      end
   end
 end
