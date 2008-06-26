@@ -1,0 +1,6 @@
+[submodule "repos/development"]
+	path = repos/development
+	url = git@kindlyviking.com:blit-dev
+[submodule "repos/test"]
+	path = repos/test
+	url = git@kindlyviking.com:blit-dev

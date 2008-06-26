@@ -33,15 +33,13 @@ task :svn_add do
    system "svn status | grep '^\?' | sed -e 's/? *//' | sed -e 's/ /\ /g' | xargs svn add"
 end
 
-desc "Initialize git repository"
-task :git_boot do
-  system "rm -fr repos/#{Merb.env}"
-  mkdir  "repos/#{Merb.env}"
-  repos = Git.init(File.expand_path("repos/#{Merb.env}"))
-  touch  "repos/#{Merb.env}/README"
-  mkdir  "repos/#{Merb.env}/posts"
-  touch  "repos/#{Merb.env}/posts/housekeeping"
-  repos.add("README")
-  repos.add("posts/housekeeping")
-  repos.commit("Initial commit")
+namespace :repos do
+  desc "Initialize git repository"
+  task :boot do
+    local_dir  = "repos/#{Merb.env}"
+    remote_url = ENV['REMOTE']
+    system "rm -fr #{local_dir}"
+
+    system "git submodule add #{remote_url} #{local_dir}"
+  end
 end
