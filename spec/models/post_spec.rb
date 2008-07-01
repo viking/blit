@@ -9,12 +9,12 @@ describe Post do
   end
 
   it "should have a title" do
-    post = Post.new(:title => "pants")
+    post = Post.new("title" => "pants")
     post.title.should == "pants"
   end
 
   it "should have a body" do
-    post = Post.new(:body => "pants")
+    post = Post.new("body" => "pants")
     post.body.should == "pants"
   end
 

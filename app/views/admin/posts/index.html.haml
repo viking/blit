@@ -1,0 +1,14 @@
+%h1 Posts
+
+%table
+  %tr
+    %th Title
+    %th Edit
+    %th Delete
+  - @posts.each do |post|
+    %tr
+      %td= post.title
+      %td= link_to "Edit",   url(:edit_post, post.id)
+      %td= link_to "Delete", url(:delete_post, post.id)
+
+%p= link_to "New post", url(:new_post)

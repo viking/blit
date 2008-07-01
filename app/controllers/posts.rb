@@ -1,46 +1,35 @@
 class Posts < Application
   
   def index
-    @posts = Post.find(:all)
-    display @posts
+    render
   end
 
   def show
-    @post = Post.find(params[:id])
-    display @post
+    render
   end
 
   def new
-    @post = Post.new
-    display @post
+    render
   end
 
   def edit
-    @post = Post.find(params[:id])
-    display @post
+    render
   end
 
   def delete
-    @post = Post.find(params[:id])
-    display @post
+    render
   end
 
   def create
-    @post = Post.new(params[:post])
-    @post.save
-    redirect url(:post, @post.id)
+    render
   end
 
   def update
-    @post = Post.find(params[:id])
-    @post.update(params[:post])
-    redirect url(:post, @post.id)
+    render
   end
 
   def destroy
-    @post = Post.find(params[:id])
-    @post.destroy
-    redirect url(:posts)
+    render
   end
   
 end
