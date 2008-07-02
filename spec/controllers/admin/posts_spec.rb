@@ -29,12 +29,10 @@ describe Admin::Posts do
     before(:each) do
       @action = :show
       @params[:id] = "1"
-      Post.stub!(:find).and_return(@post)
     end
 
-    it "should find the post" do
-      Post.should_receive(:find).with("1").and_return(@post)
-      do_dispatch
+    it "should redirect to edit" do
+      do_dispatch.should redirect_to(url(:edit_post, "1"))
     end
   end
 

@@ -7,6 +7,10 @@ module Blit
             def #{name}
               @attributes["#{name}"]
             end
+
+            def #{name}=(val)
+              @attributes["#{name}"] = val
+            end
           EOF
         end
       end
@@ -48,6 +52,21 @@ module Blit
           ids.collect { |i| instantiate(i) } 
         end
       end
+
+      def callbacks
+        @callbacks ||= { 
+          :before_save => [],
+          :before_create => []
+        }
+      end
+
+      def before_save(*methods)
+        callbacks[:before_save] += methods
+      end
+
+      def before_create(*methods)
+        callbacks[:before_create] += methods
+      end
     end
 
     attr_reader :id
@@ -59,7 +78,11 @@ module Blit
 
     def save
       # create file
-      @id ||= housekeeper.increment
+      if @id.nil?
+        @id = housekeeper.increment
+        self.class.callbacks[:before_create].each { |method| self.send(method) }
+      end
+      self.class.callbacks[:before_save].each { |method| self.send(method) }
       write_attributes_to_file
 
       # add and commit
@@ -72,9 +95,11 @@ module Blit
     end
 
     def update(attribs)
-      tmp = @attributes.merge(attribs)
-      if tmp != @attributes
-        @attributes = tmp
+      before = @attributes.dup
+      @attributes.merge!(attribs)
+      self.class.callbacks[:before_save].each { |method| self.send(method) }
+
+      if before != @attributes
         write_attributes_to_file
 
         Blit.repository.add(shortfn)

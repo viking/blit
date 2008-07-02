@@ -1,11 +1,13 @@
 class Posts < Application
   
   def index
-    render
+    @posts = Post.find(:all)
+    display @posts
   end
 
   def show
-    render
+    @post = Post.find(params[:id])
+    display @post
   end
 
   def new

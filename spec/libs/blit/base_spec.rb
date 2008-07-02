@@ -1,7 +1,17 @@
 require File.join(File.dirname(__FILE__), "..", "..", 'spec_helper.rb')
 
 class Pants < Blit::Base
-  attributes :waist, :length
+  attributes :waist, :length, :product, :sum
+  before_save :calculate_product
+  before_create :calculate_sum
+
+  def calculate_product
+    self.product = waist * length   if waist && length
+  end
+
+  def calculate_sum
+    self.sum = waist + length   if waist && length
+  end
 end
 
 describe "a subclass of Blit::Base" do
@@ -27,8 +37,10 @@ describe "a subclass of Blit::Base" do
   end
 
   it "should have attribute accessors" do
-    Pants.instance_methods.should include("waist")
-    Pants.instance_methods.should include("length")
+    %w{waist length product}.each do |name|
+      Pants.instance_methods.should include(name)
+      Pants.instance_methods.should include("#{name}=")
+    end
   end
 
   it "should have a full_path" do
@@ -126,13 +138,16 @@ describe "a subclass of Blit::Base" do
 
   describe "#save" do
     describe "when saving an existing object" do
-      before(:all) do
-        File.open(@path + "123", 'w') do |f|
-          f.puts({"waist" => 36, "length" => 32}.to_yaml)
-        end
-      end
 
       before(:each) do
+        File.open(@path + "123", 'w') do |f|
+          f.puts({
+            "waist" => 36,
+            "length" => 32,
+            "product" => 1152,
+            "sum" => 68
+          }.to_yaml)
+        end
         @pants = Pants.instantiate(123)
       end
 
@@ -150,6 +165,17 @@ describe "a subclass of Blit::Base" do
         @repos.should_not_receive(:add).with("pants/housekeeping")
         @pants.save
       end
+
+      it "should call any before save methods" do
+        @pants.save
+        @pants.product.should == 1152
+      end
+
+      it "should NOT call any before create methods" do
+        @pants.waist = 123
+        @pants.save
+        @pants.sum.should == 68
+      end
       
       after(:all) do
         File.delete(@path + "123")
@@ -158,7 +184,7 @@ describe "a subclass of Blit::Base" do
 
     describe "when saving a new object" do
       before(:each) do
-        @pants = Pants.new(:waist => 36, :length => 30)
+        @pants = Pants.new("waist" => 36, "length" => 30)
         @hk.stub!(:out_of_sync?).and_return(true)
       end
 
@@ -175,8 +201,10 @@ describe "a subclass of Blit::Base" do
       it "should create a file with the correct content" do
         @pants.save
         YAML.load_file(@path + "1").should == {
-          :waist  => 36,
-          :length => 30 
+          "waist"  => 36,
+          "length" => 30,
+          "product" => 1080,
+          "sum" => 66
         }
       end
 
@@ -203,6 +231,16 @@ describe "a subclass of Blit::Base" do
       it "should commit" do
         @repos.should_receive(:commit).with("Added pants 1")
         @pants.save
+      end
+
+      it "should call any before save methods" do
+        @pants.save
+        @pants.product.should == 1080
+      end
+
+      it "should call any before create methods" do
+        @pants.save
+        @pants.sum.should == 66
       end
 
       describe "when there are other files" do
@@ -236,9 +274,14 @@ describe "a subclass of Blit::Base" do
   describe "#update" do
     before(:each) do
       File.open(@path + "123", 'w') do |f|
-        f.puts({"waist" => 36, "length" => 32}.to_yaml)
+        f.puts({"waist" => 36, "length" => 32, "product" => 1152}.to_yaml)
       end
       @pants = Pants.instantiate(123)
+    end
+
+    it "should call any before save methods" do
+      @pants.update("waist" => 37, "length" => 33)
+      @pants.product.should == 1221
     end
 
     it "should change its attributes" do
@@ -251,7 +294,8 @@ describe "a subclass of Blit::Base" do
       @pants.update("waist" => 37, "length" => 33)
       YAML.load_file(@path + "123").should == {
         "waist" => 37,
-        "length" => 33
+        "length" => 33,
+        "product" => 1221
       }
     end
 

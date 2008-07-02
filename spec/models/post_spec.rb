@@ -1,8 +1,6 @@
 require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
 describe Post do
-  before(:each) do
-  end
 
   it "should be a subclass of Blit::Base" do
     Post.superclass.should == Blit::Base
@@ -18,4 +16,9 @@ describe Post do
     post.body.should == "pants"
   end
 
+  it "should have a permalink after saving" do
+    post = Post.new("title" => "pants are awesome")
+    post.save
+    post.permalink.should == "pants-are-awesome"
+  end
 end

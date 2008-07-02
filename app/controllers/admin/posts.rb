@@ -7,8 +7,7 @@ class Posts < Application
   end
 
   def show
-    @post = Post.find(params[:id])
-    display @post
+    redirect url(:edit_post, params[:id])
   end
 
   def new
